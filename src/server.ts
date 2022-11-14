@@ -401,7 +401,7 @@ export class Server extends EventEmitter {
           this.emit("headers", headers, methodName);
         }
   }
-  private _getMethodNameByForce(binding: BindingElement, headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp,  body: any, callback: any) {
+  private _getMethodNameByForce(binding: BindingElement, headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp,  body: any, callback: any) : any {
     const methods = binding.methods;
     for (const methodName in methods) {
       const method = methods[methodName];

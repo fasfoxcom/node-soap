@@ -408,6 +408,7 @@ export class Server extends EventEmitter {
         return methodName
 
       } catch (e) {
+        true
       }
     }
     return null

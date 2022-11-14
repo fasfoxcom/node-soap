@@ -356,10 +356,11 @@ export class Server extends EventEmitter {
     return soapAction.indexOf('"') === 0 ? soapAction.slice(1, -1) : soapAction;
   }
 
-  private _getMethodNameByForce(binding: BindingElement, headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp, pair: any, body: any,) {
+  private _getMethodNameByForce(binding: BindingElement, headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp,  body: any,) {
     const methods = binding.methods;
     for (const methodName in methods) {
       const method = methods[methodName];
+      const pair = binding.topElements[methodName];
 
       try {
         /** Style can be defined in method. If method has no style then look in binding */
@@ -521,7 +522,6 @@ export class Server extends EventEmitter {
               methodName,
               messageElemName,
               includeTimestamp,
-              pair,
               body
           );
         }

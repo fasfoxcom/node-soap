@@ -356,6 +356,67 @@ export class Server extends EventEmitter {
     return soapAction.indexOf('"') === 0 ? soapAction.slice(1, -1) : soapAction;
   }
 
+  private _getMethodNameByForce(binding: BindingElement , headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp, pair: any, body: any) {
+    const methods = binding.methods;
+    let methodNameFound = true;
+    for (const methodName in methods) {
+      const method = methods[methodName];
+
+     try {
+          /** Style can be defined in method. If method has no style then look in binding */
+        const style = method.style || binding.style;
+
+       let callback = (result: any) => {}
+        if (style === "rpc") {
+          this._executeMethod(
+            {
+              serviceName: serviceName,
+              portName: portName,
+              methodName: methodName,
+              outputName: messageElemName + "Response",
+              args: body[messageElemName],
+              headers: headers,
+              style: "rpc",
+            },
+            req,
+            res,
+            callback
+          );
+        } else {
+          this._executeMethod(
+            {
+              serviceName: serviceName,
+              portName: portName,
+              methodName: methodName,
+              outputName: pair.outputName,
+              args: body[messageElemName],
+              headers: headers,
+              style: "document",
+            },
+            req,
+            res,
+            callback,
+            includeTimestamp
+          );
+        }
+
+
+        this.emit("request", obj, methodName);
+        if (headers) {
+          this.emit("headers", headers, methodName);
+        }
+        methodNameFound=true;
+
+
+        return methodName
+
+     } catch (e) {
+       methodNameFound = false;
+     }
+     }
+
+  }
+
   private _process(
     input,
     req: Request,
@@ -436,11 +497,12 @@ export class Server extends EventEmitter {
       }
 
       try {
-        const soapAction = this._getSoapAction(req);
         const messageElemName =
           Object.keys(body)[0] === "attributes"
             ? Object.keys(body)[1]
             : Object.keys(body)[0];
+        const soapAction = this._getSoapAction(req);
+
         const pair = binding.topElements[messageElemName]
           ? binding.topElements[messageElemName]
           : binding.topElements[soapAction];
@@ -450,48 +512,23 @@ export class Server extends EventEmitter {
             soapAction
           );
         } else {
-          methodName = pair ? pair.methodName : messageElemName;
-        }
-        /** Style can be defined in method. If method has no style then look in binding */
-        const style = binding.methods[methodName].style || binding.style;
-
-        this.emit("request", obj, methodName);
-        if (headers) {
-          this.emit("headers", headers, methodName);
+          methodName = pair ? pair.methodName : null;
         }
 
-        if (style === "rpc") {
-          this._executeMethod(
-            {
-              serviceName: serviceName,
-              portName: portName,
-              methodName: methodName,
-              outputName: messageElemName + "Response",
-              args: body[messageElemName],
-              headers: headers,
-              style: "rpc",
-            },
+        this._getMethodNameByForce(
+            binding,
+            headers,
+            obj,
             req,
             res,
-            callback
-          );
-        } else {
-          this._executeMethod(
-            {
-              serviceName: serviceName,
-              portName: portName,
-              methodName: methodName,
-              outputName: pair.outputName,
-              args: body[messageElemName],
-              headers: headers,
-              style: "document",
-            },
-            req,
-            res,
-            callback,
-            includeTimestamp
-          );
-        }
+            serviceName,
+            portName,
+            methodName,
+            messageElemName,
+            includeTimestamp,
+            pair,
+            body
+        );
       } catch (error) {
         if (error.Fault !== undefined) {
           return this._sendError(error.Fault, callback, includeTimestamp);

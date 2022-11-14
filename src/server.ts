@@ -356,18 +356,12 @@ export class Server extends EventEmitter {
     return soapAction.indexOf('"') === 0 ? soapAction.slice(1, -1) : soapAction;
   }
 
-  private _getMethodNameByForce(binding: BindingElement, headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp,  body: any,) {
-    const methods = binding.methods;
-    for (const methodName in methods) {
-      const method = methods[methodName];
-      const pair = binding.topElements[methodName];
-
-      try {
-        /** Style can be defined in method. If method has no style then look in binding */
+  private _callService(
+      binding: BindingElement, headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp,  body: any, callback: any, method: any, pair: any
+  ){
+           /** Style can be defined in method. If method has no style then look in binding */
         const style = method.style || binding.style;
 
-        let callback = (result: any) => {
-        }
         if (style === "rpc") {
           this._executeMethod(
               {
@@ -406,8 +400,16 @@ export class Server extends EventEmitter {
         if (headers) {
           this.emit("headers", headers, methodName);
         }
-        return methodName
+  }
+  private _getMethodNameByForce(binding: BindingElement, headers: any, obj: object, req: Request, res: Response, serviceName: string, portName: string, methodName: string, messageElemName: string, includeTimestamp,  body: any, callback: any) {
+    const methods = binding.methods;
+    for (const methodName in methods) {
+      const method = methods[methodName];
+      const pair = binding.topElements[methodName];
 
+      try {
+
+        this._callService(binding, headers, obj, req, res, serviceName, portName, methodName, messageElemName, includeTimestamp,  body, callback, method, pair);
       } catch (e) {
         true
       }
@@ -512,9 +514,10 @@ export class Server extends EventEmitter {
           );
         } else {
           methodName = pair ? pair.methodName : null;
+        }
 
-          if (methodName == null) {
-            methodName = this._getMethodNameByForce(
+        if (methodName == null) {
+          methodName = this._getMethodNameByForce(
               binding,
               headers,
               obj,
@@ -525,41 +528,28 @@ export class Server extends EventEmitter {
               methodName,
               messageElemName,
               includeTimestamp,
-              body
+              body, callback
           )
-            pair = binding.topElements[methodName];
-          }
-        }
-
-          /** Style can be defined in method. If method has no style then look in binding */
-        const style = binding.methods[methodName].style || binding.style;
-
-        this.emit("request", obj, methodName);
-        if (headers) {
-          this.emit("headers", headers, methodName);
-        }
-
-        if (style === 'rpc') {
-          this._executeMethod({
-            serviceName: serviceName,
-            portName: portName,
-            methodName: methodName,
-            outputName: messageElemName + 'Response',
-            args: body[messageElemName],
-            headers: headers,
-            style: 'rpc',
-          }, req, res, callback);
+          pair = binding.topElements[methodName];
         } else {
-          this._executeMethod({
-            serviceName: serviceName,
-            portName: portName,
-            methodName: methodName,
-            outputName: pair.outputName,
-            args: body[messageElemName],
-            headers: headers,
-            style: 'document',
-          }, req, res, callback, includeTimestamp);
+          this._callService(
+              binding,
+              headers,
+              obj,
+              req,
+              res,
+              serviceName,
+              portName,
+              methodName,
+              messageElemName,
+              includeTimestamp,
+              body,
+              callback,
+              binding.methods[methodName],
+              pair
+          )
         }
+
 
       } catch (error) {
         if (error.Fault !== undefined) {

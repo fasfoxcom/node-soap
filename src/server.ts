@@ -502,7 +502,7 @@ export class Server extends EventEmitter {
             : Object.keys(body)[0];
         const soapAction = this._getSoapAction(req);
 
-        const pair = binding.topElements[messageElemName]
+        let pair = binding.topElements[messageElemName]
           ? binding.topElements[messageElemName]
           : binding.topElements[soapAction];
         if (soapAction) {
@@ -511,7 +511,10 @@ export class Server extends EventEmitter {
             soapAction
           );
         } else {
-          methodName = pair ? pair.methodName : this._getMethodNameByForce(
+          methodName = pair ? pair.methodName : null;
+
+          if (methodName == null) {
+            methodName = this._getMethodNameByForce(
               binding,
               headers,
               obj,
@@ -523,7 +526,9 @@ export class Server extends EventEmitter {
               messageElemName,
               includeTimestamp,
               body
-          );
+          )
+            pair = binding.topElements[methodName];
+          }
         }
 
           /** Style can be defined in method. If method has no style then look in binding */

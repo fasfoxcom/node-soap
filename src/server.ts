@@ -408,8 +408,7 @@ export class Server extends EventEmitter {
       const pair = binding.topElements[methodName];
 
       try {
-
-        this._callService(binding, headers, obj, req, res, serviceName, portName, methodName, messageElemName, includeTimestamp,  body, callback, method, pair);
+        return this._callService(binding, headers, obj, req, res, serviceName, portName, methodName, messageElemName, includeTimestamp,  body, callback, method, pair);
       } catch (e) {
         true
       }

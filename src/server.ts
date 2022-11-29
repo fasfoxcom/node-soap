@@ -278,7 +278,7 @@ export class Server extends EventEmitter {
           (result, statusCode) => {
             this._sendHttpResponse(res, statusCode || 500, result);
             if (typeof this.log === "function") {
-              this.log("error", err);
+              this.log("error", JSON.stringify(err));
             }
           },
           new Date().toISOString()
@@ -291,7 +291,7 @@ export class Server extends EventEmitter {
           : err;
         this._sendHttpResponse(res, /* statusCode */ 500, error);
         if (typeof this.log === "function") {
-          this.log("error", error);
+          this.log("error", JSON.stringify(error));
         }
       }
     }

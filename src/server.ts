@@ -356,6 +356,16 @@ export class Server extends EventEmitter {
           if (parts.length > 0) {
             xml = parts[0].data.toString();
 
+            const files = [];
+            // let's save the attachments on the request object
+            for (let i = 1; i < parts.length; i++) {
+              files.push({
+                filename: parts[i].filename,
+                contentType: parts[i].type,
+                content: parts[i].data
+              });
+            }
+            req.FILES = files;
             res.setHeader("Content-Type", "application/xml");
           }
         } else {

@@ -355,6 +355,8 @@ export class Server extends EventEmitter {
           // We make the assumption that the first part is the XML
           if (parts.length > 0) {
             xml = parts[0].data.toString();
+
+            res.setHeader("Content-Type", "application/xml");
           }
         } else {
           xml = bxml.toString();

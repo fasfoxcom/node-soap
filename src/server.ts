@@ -342,7 +342,7 @@ export class Server extends EventEmitter {
         chunks.push(chunk);
       });
       source.on("end", () => {
-        const bxml = Buffer.concat(chunks).toString();
+        const bxml = Buffer.concat(chunks);
         let xml = "";
 
         // To handle MTOM protocol https://en.wikipedia.org/wiki/Message_Transmission_Optimization_Mechanism

@@ -17,6 +17,8 @@ import {
 import { findPrefix } from "./utils";
 import { WSDL } from "./wsdl";
 import { BindingElement, IPort } from "./wsdl/elements";
+const multipart = require('parse-multipart-data');
+const contentTypeParser = require("content-type-parser");
 
 let zlib;
 try {
@@ -340,7 +342,24 @@ export class Server extends EventEmitter {
         chunks.push(chunk);
       });
       source.on("end", () => {
-        const xml = Buffer.concat(chunks).toString();
+        const bxml = Buffer.concat(chunks).toString();
+        let xml = "";
+
+        // To handle MTOM protocol https://en.wikipedia.org/wiki/Message_Transmission_Optimization_Mechanism
+        if (req.headers["content-type"].startsWith("multipart/") ) {
+          const parsedContentType = contentTypeParser(req.headers["content-type"]);
+
+          const boundary = parsedContentType.get("boundary");
+          const parts = multipart.parse(bxml, boundary);
+
+          // We make the assumption that the first part is the XML
+          if (parts.length > 0) {
+            xml = parts[0].data.toString();
+          }
+        } else {
+          xml = bxml.toString();
+        }
+
         this._processRequestXml(req, res, xml);
       });
     } else {

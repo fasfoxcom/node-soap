@@ -362,10 +362,13 @@ export class Server extends EventEmitter {
               files.push({
                 filename: parts[i].filename,
                 contentType: parts[i].type,
-                content: parts[i].data
+                content: parts[i].data,
               });
             }
-            req.FILES = files;
+            Object.defineProperty(req, "FILES", {
+                value: files,
+                writable: false,
+            });
             res.setHeader("Content-Type", "application/xml");
           }
         } else {

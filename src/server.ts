@@ -346,25 +346,28 @@ export class Server extends EventEmitter {
         let xml = "";
 
         // To handle MTOM protocol https://en.wikipedia.org/wiki/Message_Transmission_Optimization_Mechanism
-        if (req.headers["content-type"].startsWith("multipart/") ) {
-          const parsedContentType = contentTypeParser(req.headers["content-type"]);
+        const contentType = req.headers["content-type"];
+
+        if (contentType && contentType.startsWith("multipart/") ) {
+          const parsedContentType = contentTypeParser(contentType);
 
           const boundary = parsedContentType.get("boundary");
           const parts = multipart.parse(bxml, boundary);
 
-          // We make the assumption that the first part is the XML
           if (parts.length > 0) {
-            xml = parts[0].data.toString();
+            // We make the assumption that the first part is the XML part
+            const [xmlPart, ...filesParts] = parts;
+            xml = xmlPart.data.toString();
 
-            const files = [];
             // let's save the attachments on the request object
-            for (let i = 1; i < parts.length; i++) {
-              files.push({
-                filename: parts[i].filename,
-                contentType: parts[i].type,
-                content: parts[i].data,
-              });
-            }
+            const files = filesParts.map((part) => {
+              return {
+                  filename: part.filename,
+                  contentType: part.type,
+                  content: part.data,
+              };
+            });
+
             Object.defineProperty(req, "FILES", {
                 value: files,
                 writable: false,

@@ -694,7 +694,12 @@ export class Server extends EventEmitter {
       return methodName;
     }
     for (const methodName in binding.methods) {
-      const parts = binding.methods[methodName].soapAction.split("/");
+      const bindingElement = binding.methods[methodName];
+      if (bindingElement.soapAction === undefined) {
+        continue;
+      }
+      // bindingElement.soapAction is a URL like object
+      const parts = bindingElement.soapAction.split("/");
       if (parts.reverse()[0] === soapAction) {
         return methodName;
       }

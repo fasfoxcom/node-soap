@@ -18,6 +18,7 @@ import { findPrefix } from "./utils";
 import { WSDL } from "./wsdl";
 import { BindingElement, IPort } from "./wsdl/elements";
 const multipart = require('parse-multipart-data');
+// import * as multipart from "parse-multipart-data"
 const contentTypeParser = require("content-type-parser");
 
 let zlib;

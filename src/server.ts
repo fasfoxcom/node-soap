@@ -352,13 +352,28 @@ export class Server extends EventEmitter {
         if (contentType && contentType.startsWith("multipart/") ) {
           const parsedContentType = contentTypeParser(contentType);
 
-          const boundary = parsedContentType.get("boundary");
+          const boundary = parsedContentType.get('boundary');
           const parts = multipart.parse(bxml, boundary);
 
           if (parts.length > 0) {
             // We make the assumption that the first part is the XML part
-            const [xmlPart, ...filesParts] = parts;
+            const [xmlPart, ...allFieldsParts] = parts;
             xml = xmlPart.data.toString();
+
+            const filesParts = allFieldsParts.filter((v) => {
+              return v.filename !== undefined && v.filename !== null;
+            });
+
+            const fieldsParts = allFieldsParts.filter((v) => {
+              return v.filename !== undefined && v.filename !== null;
+            });
+
+            const fields = fieldsParts.map((part) => {
+              return{
+                name: part.name,
+                content: part.data,
+              };
+            });
 
             // let's save the attachments on the request object
             const files = filesParts.map((part) => {
@@ -369,11 +384,17 @@ export class Server extends EventEmitter {
               };
             });
 
-            Object.defineProperty(req, "FILES", {
+            Object.defineProperty(req, 'FILES', {
                 value: files,
                 writable: false,
             });
-            res.setHeader("Content-Type", "application/xml");
+
+            Object.defineProperty(req, 'FIELDS', {
+                value: fields,
+                writable: false,
+            });
+
+            res.setHeader('Content-Type', 'application/xml');
           }
         } else {
           xml = bxml.toString();

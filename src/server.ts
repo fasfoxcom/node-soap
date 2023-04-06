@@ -456,7 +456,7 @@ export class Server extends EventEmitter {
         throw new Error("Failed to parse the SOAP Message body");
       }
 
-      // use port.location and current url to find the right binding
+      // use either payload or port.location and current url to find the right binding
       binding = (() => {
         const services = this.wsdl.definitions.services;
         let firstPort: IPort;
@@ -468,6 +468,16 @@ export class Server extends EventEmitter {
           for (name in ports) {
             portName = name;
             const port = ports[portName];
+            // NOTE: If the payload contains the port's tag name
+            // we consider it as a match and return the binding.
+            // But the server which has implemented node-soap should parse and
+            // validate the tag upstream.
+            const portTopElmtTagNames = Object.keys(port.binding.topElements)
+            for (let tagName of portTopElmtTagNames) {
+              if (input.includes(tagName)) {
+                return port.binding;
+              }
+            }
             const portPathname = url
               .parse(port.location)
               .pathname.replace(/\/$/, "");

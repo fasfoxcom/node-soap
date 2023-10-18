@@ -591,7 +591,6 @@ export class Server extends EventEmitter {
 
         // Let's log everything we got from the request for debug purpose
         console.debug("Request received", JSON.stringify(req, replacer,2))
-        console.debug("Headers received", JSON.stringify(headers, replacer,2))
         console.debug("Body received", JSON.stringify(body, replacer,2))
 
         if (methodName == null) {

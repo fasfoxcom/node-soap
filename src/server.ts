@@ -565,14 +565,23 @@ export class Server extends EventEmitter {
         let pair = binding.topElements[messageElemName]
           ? binding.topElements[messageElemName]
           : binding.topElements[soapAction];
+
         if (soapAction) {
           methodName = this._getMethodNameBySoapActionSuffix(
             binding,
             soapAction
           );
-        } else {
-          methodName = pair ? pair.methodName : null;
         }
+
+        if (methodName == null) {
+            // Despite having the soapAction, we didn't find a method for it
+            methodName = pair ? pair.methodName : null;
+        }
+
+        // Let's log everything we got from the request for debug purpose
+        console.debug("Request received", JSON.stringify(req, null,2))
+        console.debug("Headers received", JSON.stringify(headers, null,2))
+        console.debug("Body received", JSON.stringify(body, null,2))
 
         if (methodName == null) {
           methodName = this._getMethodNameByForce(

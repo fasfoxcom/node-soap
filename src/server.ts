@@ -578,10 +578,21 @@ export class Server extends EventEmitter {
             methodName = pair ? pair.methodName : null;
         }
 
+        const seen = new Set()
+        let replacer = (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) {
+                return '[Circular Reference]';
+             }
+                seen.add(value);
+            }
+             return value;
+        }
+
         // Let's log everything we got from the request for debug purpose
-        console.debug("Request received", JSON.stringify(req, null,2))
-        console.debug("Headers received", JSON.stringify(headers, null,2))
-        console.debug("Body received", JSON.stringify(body, null,2))
+        console.debug("Request received", JSON.stringify(req, replacer,2))
+        console.debug("Headers received", JSON.stringify(headers, replacer,2))
+        console.debug("Body received", JSON.stringify(body, replacer,2))
 
         if (methodName == null) {
           methodName = this._getMethodNameByForce(
